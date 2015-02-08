@@ -130,7 +130,6 @@
     createTower();
 
     intersect_plane = new THREE.Mesh(
-      //new THREE.PlaneGeometry( 150, 150 ),
       new THREE.PlaneBufferGeometry(150, 150),
       new THREE.MeshBasicMaterial({ opacity: 0, transparent: true })
     );
