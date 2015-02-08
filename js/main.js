@@ -1,7 +1,7 @@
 'use strict';
 
-Physijs.scripts.worker = '../physijs_worker.js';
-Physijs.scripts.ammo = 'examples/js/ammo.js';
+Physijs.scripts.worker = 'js/vendor/physijs_worker.js';
+Physijs.scripts.ammo = 'ammo.js';
 
 var initScene,
     initEventHandling,
