@@ -20,6 +20,7 @@
       table_material,
       block_material,
       intersect_plane,
+      controller,
       pinched_block = null,
       palmX = 0,
       palmY = 0,
@@ -69,7 +70,7 @@
         }
 
         scene.simulate( undefined, 1 );
-        physics_stats.update();
+        //physics_stats.update();
       }
     );
 
@@ -144,12 +145,13 @@
 
     requestAnimationFrame( render );
     scene.simulate();
+    controller.connect();
   };
 
   render = function() {
     requestAnimationFrame( render );
     renderer.render( scene, camera );
-    render_stats.update();
+    // render_stats.update();
   };
 
   createTower = (function() {
@@ -255,6 +257,43 @@
       renderer.domElement.addEventListener( 'mouseup', handleMouseUp );
     };
   })();
+
+  controller = new Leap.Controller();
+  controller.use('screenPosition', {
+    positioning: function(positionVec3){
+      return [
+        Leap.vec3.subtract(positionVec3, positionVec3, this.frame.interactionBox.center),
+        Leap.vec3.divide(positionVec3, positionVec3, this.frame.interactionBox.size),
+        Leap.vec3.multiply(positionVec3, positionVec3, [window.innerWidth, window.innerHeight, 0])
+      ];
+    }
+  });
+  controller.loop({
+    hand: function(hand){
+      // console.log(hand.stabilizedPalmPosition);
+      var screenPosition = hand.screenPosition(hand.stabilizedPalmPosition);
+      var outputContent = "x: " + (screenPosition[0]) + 'px' +
+             "        <br/>y: " + (screenPosition[1]) + 'px' +
+             "        <br/>z: " + (screenPosition[2]) + 'px';
+      console.log(screenPosition);
+      var $output = document.querySelector('#output');
+      var $cursor = document.querySelector('#cursor');
+      /*// hide and show the cursor in order to get second-topmost element.
+      $cursor.style.display = 'none';
+      var el = document.elementFromPoint(
+          hand.screenPosition()[0],
+          hand.screenPosition()[1]
+      );
+      $cursor.style.display = 'inline';
+      if (el){
+        outputContent += '<br>Topmost element: '+ el.tagName + ' #' + el.id +  ' .' + el.className;
+      }
+      $output.innerHtml = outputContent;
+      */
+      $cursor.style.left = screenPosition[0][0] + 'px';
+      $cursor.style.top =  (-1 * screenPosition[1][1]) + 'px';
+    }
+  });
 
   window.onload = initScene;
 })();
