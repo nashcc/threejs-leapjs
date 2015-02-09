@@ -20,6 +20,10 @@
       table_material,
       block_material,
       intersect_plane,
+      pinched_block = null,
+      palmX = 0,
+      palmY = 0,
+      palmZ = 0,
       selected_block = null,
       mouse_position = new THREE.Vector3,
       block_offset = new THREE.Vector3,
@@ -32,7 +36,7 @@
     renderer.shadowMapEnabled = true;
     renderer.shadowMapSoft = true;
     document.getElementById( 'viewport' ).appendChild( renderer.domElement );
-
+/*
     render_stats = new Stats();
     render_stats.domElement.style.position = 'absolute';
     render_stats.domElement.style.top = '1px';
@@ -44,7 +48,7 @@
     physics_stats.domElement.style.top = '50px';
     physics_stats.domElement.style.zIndex = 100;
     document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
-
+*/
     scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
     scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
     scene.addEventListener(
@@ -178,7 +182,9 @@
   initEventHandling = (function() {
     var _vector = new THREE.Vector3,
       projector = new THREE.Projector(),
-      handleMouseDown, handleMouseMove, handleMouseUp;
+      handleMouseDown,
+      handleMouseMove,
+      handleMouseUp;
 
     handleMouseDown = function( evt ) {
       var ray, intersections;
