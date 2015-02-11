@@ -21,6 +21,7 @@
       block_material,
       intersect_plane,
       controller,
+      isHolding = false,
       pinched_block = null,
       palmX = 0,
       palmY = 0,
@@ -186,112 +187,196 @@
       projector = new THREE.Projector(),
       handleMouseDown,
       handleMouseMove,
-      handleMouseUp;
+      handleMouseUp,
+      handlePinch,
+      handleHold,
+      handleRelease;
 
-    handleMouseDown = function( evt ) {
+    handleMouseDown = function(evt){
       var ray, intersections;
 
       _vector.set(
-        ( evt.clientX / window.innerWidth ) * 2 - 1,
-        -( evt.clientY / window.innerHeight ) * 2 + 1,
+        (evt.clientX / window.innerWidth) * 2 - 1,
+        -(evt.clientY / window.innerHeight) * 2 + 1,
         1
       );
 
-      _vector.unproject( camera );
+      _vector.unproject(camera);
 
-      ray = new THREE.Raycaster( camera.position, _vector.sub( camera.position ).normalize() );
-      intersections = ray.intersectObjects( blocks );
+      ray = new THREE.Raycaster(camera.position, _vector.sub(camera.position).normalize());
+      intersections = ray.intersectObjects(blocks);
 
-      if ( intersections.length > 0 ) {
+      if(intersections.length > 0){
         selected_block = intersections[0].object;
 
-        _vector.set( 0, 0, 0 );
-        selected_block.setAngularFactor( _vector );
-        selected_block.setAngularVelocity( _vector );
-        selected_block.setLinearFactor( _vector );
-        selected_block.setLinearVelocity( _vector );
+        _vector.set(0, 0, 0);
+        selected_block.setAngularFactor(_vector);
+        selected_block.setAngularVelocity(_vector);
+        selected_block.setLinearFactor(_vector);
+        selected_block.setLinearVelocity(_vector);
 
-        mouse_position.copy( intersections[0].point );
-        block_offset.subVectors( selected_block.position, mouse_position );
+        mouse_position.copy(intersections[0].point);
+        block_offset.subVectors(selected_block.position, mouse_position);
 
         intersect_plane.position.y = mouse_position.y;
       }
     };
 
-    handleMouseMove = function( evt ) {
+    handleMouseMove = function(evt){
 
       var ray, intersection,
         i, scalar;
 
-      if ( selected_block !== null ) {
+      if(selected_block !== null){
 
         _vector.set(
-          ( evt.clientX / window.innerWidth ) * 2 - 1,
-          -( evt.clientY / window.innerHeight ) * 2 + 1,
+          (evt.clientX / window.innerWidth) * 2 - 1,
+          -(evt.clientY / window.innerHeight) * 2 + 1,
           1
         );
-        _vector.unproject( camera );
+        _vector.unproject(camera);
 
-        ray = new THREE.Raycaster( camera.position, _vector.sub( camera.position ).normalize() );
-        intersection = ray.intersectObject( intersect_plane );
-        mouse_position.copy( intersection[0].point );
+        ray = new THREE.Raycaster(camera.position, _vector.sub(camera.position).normalize());
+        intersection = ray.intersectObject(intersect_plane);
+        mouse_position.copy(intersection[0].point);
       }
 
     };
 
-    handleMouseUp = function( evt ) {
+    handleMouseUp = function(evt){
 
-      if ( selected_block !== null ) {
-        _vector.set( 1, 1, 1 );
-        selected_block.setAngularFactor( _vector );
-        selected_block.setLinearFactor( _vector );
+      if (selected_block !== null){
+        _vector.set(1, 1, 1);
+        selected_block.setAngularFactor(_vector);
+        selected_block.setLinearFactor(_vector);
 
         selected_block = null;
       }
 
     };
 
+    handlePinch = function(evt){
+      // console.log('pinch started', evt.detail);
+      var ray, intersections;
+
+      _vector.set(
+        (evt.detail[0] / window.innerWidth) * 2 - 1,
+        -(evt.detail[1] / window.innerHeight) * 2 + 1,
+        evt.detail[2]
+      );
+
+      _vector.unproject(camera);
+
+      ray = new THREE.Raycaster(camera.position, _vector.sub(camera.position).normalize());
+      intersections = ray.intersectObjects(blocks);
+
+      if(intersections.length > 0){
+        selected_block = intersections[0].object;
+
+        _vector.set(0, 0, 0);
+        selected_block.setAngularFactor(_vector);
+        selected_block.setAngularVelocity(_vector);
+        selected_block.setLinearFactor(_vector);
+        selected_block.setLinearVelocity(_vector);
+
+        mouse_position.copy(intersections[0].point);
+        block_offset.subVectors(selected_block.position, mouse_position);
+
+        intersect_plane.position.y = mouse_position.y;
+      }
+    };
+
+    handleHold = function(evt){
+      // console.log('pinch holding', evt.detail);
+      var ray, intersection,
+        i, scalar;
+
+      if(selected_block !== null){
+
+        _vector.set(
+          (evt.detail[0] / window.innerWidth) * 2 - 1,
+          -(evt.detail[1] / window.innerHeight) * 2 + 1,
+          evt.detail[2]
+        );
+
+        _vector.unproject(camera);
+
+        ray = new THREE.Raycaster(camera.position, _vector.sub(camera.position).normalize());
+        intersection = ray.intersectObject(intersect_plane);
+        if(intersection[0]){
+          mouse_position.copy(intersection[0].point);
+        }
+      }
+    };
+
+    handleRelease = function(evt){
+      // console.log('pinch released', evt.detail);
+      if(selected_block !== null){
+        _vector.set(1, 1, 1);
+        selected_block.setAngularFactor(_vector);
+        selected_block.setLinearFactor(_vector);
+
+        selected_block = null;
+      }
+    };
+
     return function() {
-      renderer.domElement.addEventListener( 'mousedown', handleMouseDown );
-      renderer.domElement.addEventListener( 'mousemove', handleMouseMove );
-      renderer.domElement.addEventListener( 'mouseup', handleMouseUp );
+      renderer.domElement.addEventListener('mousedown', handleMouseDown);
+      renderer.domElement.addEventListener('mousemove', handleMouseMove);
+      renderer.domElement.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('pinch', handlePinch);
+      window.addEventListener('hold', handleHold);
+      window.addEventListener('release', handleRelease);
     };
   })();
 
   controller = new Leap.Controller();
   controller.use('screenPosition', {
     positioning: function(positionVec3){
-      return [
-        Leap.vec3.subtract(positionVec3, positionVec3, this.frame.interactionBox.center),
-        Leap.vec3.divide(positionVec3, positionVec3, this.frame.interactionBox.size),
-        Leap.vec3.multiply(positionVec3, positionVec3, [window.innerWidth, window.innerHeight, 0])
-      ];
+      var iBox = this.frame.interactionBox,
+          normalizedPoint = iBox.normalizePoint(positionVec3, false),
+          appX = normalizedPoint[0] * window.innerWidth,
+          appY = (1 - normalizedPoint[1]) * window.innerHeight;
+      // console.log(normalizedPoint);
+      return [appX, appY, normalizedPoint[2]];
     }
   });
+
   controller.loop({
     hand: function(hand){
+      var screenPosition = hand.screenPosition(hand.stabilizedPalmPosition),
+          $cursor        = document.querySelector('#cursor'),
+          isPinched      = (hand.pinchStrength.toPrecision(2) * 1) > 0.70,
+          eventName,
+          eventObj,
+          detailObj;
       // console.log(hand.stabilizedPalmPosition);
-      var screenPosition = hand.screenPosition(hand.stabilizedPalmPosition);
-      var outputContent = "x: " + (screenPosition[0]) + 'px' +
-             "        <br/>y: " + (screenPosition[1]) + 'px' +
-             "        <br/>z: " + (screenPosition[2]) + 'px';
-      console.log(screenPosition);
-      var $output = document.querySelector('#output');
-      var $cursor = document.querySelector('#cursor');
-      /*// hide and show the cursor in order to get second-topmost element.
-      $cursor.style.display = 'none';
-      var el = document.elementFromPoint(
-          hand.screenPosition()[0],
-          hand.screenPosition()[1]
-      );
-      $cursor.style.display = 'inline';
-      if (el){
-        outputContent += '<br>Topmost element: '+ el.tagName + ' #' + el.id +  ' .' + el.className;
+
+      // console.log(screenPosition);
+      $cursor.style.left = screenPosition[0] + 'px';
+      $cursor.style.top = screenPosition[1] + 'px';
+
+      // console.log('isPinched', isPinched, hand.pinchStrength.toPrecision(2));
+      if(isPinched){
+        $cursor.style.background = 'red';
+        if(isHolding){
+          eventName = 'hold';
+        }else{
+          eventName = 'pinch';
+          isHolding = true;
+        }
+        detailObj = {'detail': [screenPosition[0], screenPosition[1], screenPosition[2]]};
+        eventObj = new CustomEvent(eventName, detailObj);
+        window.dispatchEvent(eventObj);
+      }else{
+        $cursor.style.background = 'blue';
+        if(isHolding){
+          detailObj = {'detail': [screenPosition[0], screenPosition[1], screenPosition[2]]};
+          eventObj = new CustomEvent('release', detailObj);
+          window.dispatchEvent(eventObj);
+        }
+        isHolding = false;
       }
-      $output.innerHtml = outputContent;
-      */
-      $cursor.style.left = screenPosition[0][0] + 'px';
-      $cursor.style.top =  (-1 * screenPosition[1][1]) + 'px';
     }
   });
 

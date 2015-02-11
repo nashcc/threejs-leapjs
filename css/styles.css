@@ -33,16 +33,16 @@ body {
 }
 
 #cursor {
-  width: 60px;
-  height: 60px;
+  width: 20px;
+  height: 20px;
   position: fixed;
-  margin-left: -50px;
-  margin-top: -50px;
+  margin-left: -10px;
+  margin-top: -10px;
   z-index: 910;
   opacity: 0.9;
   background: black;
   border-radius: 100%;
-  background: -webkit-radial-gradient(100px 100px, circle, #5cabff, #000);
-  background: -moz-radial-gradient(100px 100px, circle, #5cabff, #000);
-  background: radial-gradient(100px 100px, circle, #5cabff, #000);
+  background: -webkit-radial-gradient(50px 50px, circle, #5cabff, #000);
+  background: -moz-radial-gradient(50px 50px, circle, #5cabff, #000);
+  background: radial-gradient(50px 50px, circle, #5cabff, #000);
 }
