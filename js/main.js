@@ -9,8 +9,6 @@
       render,
       createTower,
       renderer,
-      render_stats,
-      physics_stats,
       scene,
       dir_light,
       am_light,
@@ -23,9 +21,6 @@
       controller,
       isHolding = false,
       pinched_block = null,
-      palmX = 0,
-      palmY = 0,
-      palmZ = 0,
       selected_block = null,
       mouse_position = new THREE.Vector3,
       block_offset = new THREE.Vector3,
@@ -33,47 +28,33 @@
       _v3 = new THREE.Vector3;
 
   initScene = function() {
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMapEnabled = true;
     renderer.shadowMapSoft = true;
-    document.getElementById( 'viewport' ).appendChild( renderer.domElement );
-/*
-    render_stats = new Stats();
-    render_stats.domElement.style.position = 'absolute';
-    render_stats.domElement.style.top = '1px';
-    render_stats.domElement.style.zIndex = 100;
-    document.getElementById( 'viewport' ).appendChild( render_stats.domElement );
+    document.getElementById('viewport').appendChild(renderer.domElement);
 
-    physics_stats = new Stats();
-    physics_stats.domElement.style.position = 'absolute';
-    physics_stats.domElement.style.top = '50px';
-    physics_stats.domElement.style.zIndex = 100;
-    document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
-*/
     scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
-    scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
-    scene.addEventListener(
-      'update',
-      function() {
+    scene.setGravity(new THREE.Vector3(0, -30, 0));
+    scene.addEventListener('update', function(){
 
-        if ( selected_block !== null ) {
+      if(selected_block !== null){
+        _v3.copy(mouse_position).add(block_offset).sub(selected_block.position).multiplyScalar(5);
+        _v3.y = 0;
+        selected_block.setLinearVelocity( _v3 );
 
-          _v3.copy( mouse_position ).add( block_offset ).sub( selected_block.position ).multiplyScalar( 5 );
-          _v3.y = 0;
-          selected_block.setLinearVelocity( _v3 );
-
-          // Reactivate all of the blocks
-          _v3.set( 0, 0, 0 );
-          for ( _i = 0; _i < blocks.length; _i++ ) {
-            blocks[_i].applyCentralImpulse( _v3 );
-          }
+        // Reactivate all of the blocks
+        _v3.set(0, 0, 0);
+        for(_i = 0; _i < blocks.length; _i++){
+          blocks[_i].applyCentralImpulse(_v3);
         }
-
-        scene.simulate( undefined, 1 );
-        //physics_stats.update();
       }
-    );
+
+      scene.simulate(undefined, 1);
+    });
 
     camera = new THREE.PerspectiveCamera(
       35,
