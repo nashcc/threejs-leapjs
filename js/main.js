@@ -25,7 +25,8 @@
       mouse_position = new THREE.Vector3,
       block_offset = new THREE.Vector3,
       _i,
-      _v3 = new THREE.Vector3;
+      _v3 = new THREE.Vector3,
+      holdVector = new THREE.Vector3;
 
   initScene = function() {
     renderer = new THREE.WebGLRenderer({
@@ -39,6 +40,7 @@
 
     scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
     scene.setGravity(new THREE.Vector3(0, -30, 0));
+
     scene.addEventListener('update', function(){
 
       if(selected_block !== null){
@@ -88,7 +90,7 @@
 
     // Materials
     table_material = Physijs.createMaterial(
-      new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/wood.jpg' ), ambient: 0xFFFFFF }),
+      new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/wood2.png' ), ambient: 0xFFFFFF }),
       .9, // high friction
       .2 // low restitution
     );
@@ -118,7 +120,7 @@
 
     intersect_plane = new THREE.Mesh(
       new THREE.PlaneBufferGeometry(150, 150),
-      new THREE.MeshBasicMaterial({ opacity: 0, transparent: true })
+      new THREE.MeshBasicMaterial({ opacity: 0.5, transparent: true })
     );
     intersect_plane.rotation.x = Math.PI / -2;
     scene.add( intersect_plane );
@@ -133,16 +135,20 @@
   render = function() {
     requestAnimationFrame( render );
     renderer.render( scene, camera );
-    // render_stats.update();
   };
 
   createTower = (function() {
-    var block_length = 6, block_height = 1, block_width = 1.5, block_offset = 2,
-      block_geometry = new THREE.BoxGeometry( block_length, block_height, block_width );
+    var block_length = 6,
+        block_height = 1,
+        block_width = 1.5,
+        block_offset = 2,
+        block_geometry = new THREE.BoxGeometry( block_length, block_height, block_width );
 
     return function() {
-      var i, j, rows = 16,
-        block;
+      var i,
+          j,
+          rows = 16,
+          block;
 
       for ( i = 0; i < rows; i++ ) {
         for ( j = 0; j < 3; j++ ) {
@@ -154,6 +160,7 @@
           } else {
             block.position.z = block_offset * j - ( block_offset * 3 / 2 - block_offset / 2 );
           }
+
           block.receiveShadow = true;
           block.castShadow = true;
           scene.add( block );
@@ -198,7 +205,6 @@
 
         mouse_position.copy(intersections[0].point);
         block_offset.subVectors(selected_block.position, mouse_position);
-
         intersect_plane.position.y = mouse_position.y;
       }
     };
@@ -241,9 +247,9 @@
       var ray, intersections;
 
       _vector.set(
-        (evt.detail[0] / window.innerWidth) * 2 - 1,
-        -(evt.detail[1] / window.innerHeight) * 2 + 1,
-        evt.detail[2]
+        (evt.detail.x / window.innerWidth) * 2 - 1,
+        -(evt.detail.y / window.innerHeight) * 2 + 1,
+        evt.detail.z
       );
 
       _vector.unproject(camera);
@@ -275,11 +281,11 @@
       if(selected_block !== null){
 
         _vector.set(
-          (evt.detail[0] / window.innerWidth) * 2 - 1,
-          -(evt.detail[1] / window.innerHeight) * 2 + 1,
-          evt.detail[2]
+          (evt.detail.x / window.innerWidth) * 2 - 1,
+          -(evt.detail.y / window.innerHeight) * 2 + 1,
+          evt.detail.z
         );
-
+        console.log(_vector);
         _vector.unproject(camera);
 
         ray = new THREE.Raycaster(camera.position, _vector.sub(camera.position).normalize());
@@ -287,6 +293,7 @@
         if(intersection[0]){
           mouse_position.copy(intersection[0].point);
         }
+
       }
     };
 
@@ -319,7 +326,7 @@
           appX = normalizedPoint[0] * window.innerWidth,
           appY = (1 - normalizedPoint[1]) * window.innerHeight;
       // console.log(normalizedPoint);
-      return [appX, appY, normalizedPoint[2]];
+      return new THREE.Vector3(appX, appY, normalizedPoint[2]);
     }
   });
 
@@ -334,8 +341,8 @@
       // console.log(hand.stabilizedPalmPosition);
 
       // console.log(screenPosition);
-      $cursor.style.left = screenPosition[0] + 'px';
-      $cursor.style.top = screenPosition[1] + 'px';
+      $cursor.style.left = screenPosition.x + 'px';
+      $cursor.style.top = screenPosition.y + 'px';
 
       // console.log('isPinched', isPinched, hand.pinchStrength.toPrecision(2));
       if(isPinched){
@@ -346,13 +353,13 @@
           eventName = 'pinch';
           isHolding = true;
         }
-        detailObj = {'detail': [screenPosition[0], screenPosition[1], screenPosition[2]]};
+        detailObj = {'detail': screenPosition};
         eventObj = new CustomEvent(eventName, detailObj);
         window.dispatchEvent(eventObj);
       }else{
         $cursor.style.background = 'blue';
         if(isHolding){
-          detailObj = {'detail': [screenPosition[0], screenPosition[1], screenPosition[2]]};
+          detailObj = {'detail': screenPosition};
           eventObj = new CustomEvent('release', detailObj);
           window.dispatchEvent(eventObj);
         }
